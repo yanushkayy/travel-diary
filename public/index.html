@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Дневник путешествий</title>
+    <style>
+      :root {
+        --bg: #f7f8fb;
+        --card: #ffffff;
+        --border: #e1e6f0;
+        --text: #1f2937;
+        --muted: #4b5563;
+        --accent: #7a9cff;
+        --accent-strong: #5f82fb;
+        --accent-soft: #e9edff;
+        --success: #7bd97b;
+        --error: #f28b82;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 18px;
+        background: var(--bg);
+        color: var(--text);
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0 0 8px;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        padding: 14px;
+        margin-bottom: 14px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+      label {
+        display: block;
+        margin-top: 8px;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 4px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #f8f9fb;
+        color: var(--text);
+        transition:
+          border 0.2s,
+          box-shadow 0.2s;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(122, 156, 255, 0.25);
+      }
+      button {
+        margin-top: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        background: var(--accent);
+        color: white;
+        font-weight: 600;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+      }
+      button:hover {
+        background: var(--accent-strong);
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: #fefeff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 2px 0;
+      }
+      .tag {
+        background: var(--accent-soft);
+        padding: 2px 6px;
+        border-radius: 6px;
+        margin-right: 4px;
+        display: inline-block;
+        font-size: 12px;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .row > * {
+        flex: 1;
+        min-width: 180px;
+      }
+      #toast-container {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 1000;
+      }
+      .toast {
+        min-width: 220px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+        opacity: 0.98;
+        transition:
+          opacity 0.4s ease,
+          transform 0.4s ease;
+      }
+      .toast-success {
+        border-color: var(--success);
+        background: #edffed;
+      }
+      .toast-error {
+        border-color: var(--error);
+        background: #ffecec;
+      }
+      .toast.hide {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      .imgbox {
+        width: 100%;
+        max-height: 180px;
+        overflow: hidden;
+        border-radius: 8px;
+        margin: 8px 0;
+        border: 1px solid var(--border);
+        background: #f4f6fb;
+      }
+      .imgbox img {
+        width: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toast-container"></div>
+    <h1>Дневник путешествий</h1>
+
+    <section>
+      <h2>Авторизация</h2>
+      <div class="row">
+        <div>
+          <label>Имя пользователя <input id="auth-user" /></label>
+        </div>
+        <div>
+          <label>Пароль <input id="auth-pass" type="password" /></label>
+        </div>
+      </div>
+      <div class="row">
+        <button onclick="register()">Зарегистрироваться</button>
+        <button onclick="login()">Войти</button>
+      </div>
+      <div class="meta">Токен: <span id="token-label">(нет)</span></div>
+    </section>
+
+    <section>
+      <h2>Новая запись о путешествии</h2>
+      <div class="row">
+        <div>
+          <label>Заголовок <input id="trip-title" /></label>
+        </div>
+        <div>
+          <label
+            >Местоположение
+            <input id="trip-location" placeholder="Город, страна"
+          /></label>
+        </div>
+        <div>
+          <label
+            >Широта (lat) <input id="trip-lat" type="number" step="0.0001"
+          /></label>
+        </div>
+        <div>
+          <label
+            >Долгота (lng) <input id="trip-lng" type="number" step="0.0001"
+          /></label>
+        </div>
+      </div>
+      <label>Описание <textarea id="trip-desc" rows="3"></textarea></label>
+      <div class="row">
+        <div>
+          <label
+            >Стоимость (₽) <input id="trip-cost" type="number" step="0.01"
+          /></label>
+        </div>
+        <div>
+          <label
+            >Ссылка на изображение
+            <input id="trip-image" placeholder="https://..."
+          /></label>
+        </div>
+      </div>
+      <label
+        >Места культурного наследия
+        <textarea
+          id="trip-heritage"
+          rows="2"
+          placeholder="Список через запятую"
+        ></textarea>
+      </label>
+      <label
+        >Места для посещения
+        <textarea
+          id="trip-places"
+          rows="2"
+          placeholder="Список через запятую"
+        ></textarea>
+      </label>
+      <div class="row">
+        <div>
+          <label
+            >Безопасность (0-10)
+            <input id="trip-safe" type="number" min="0" max="10"
+          /></label>
+        </div>
+        <div>
+          <label
+            >Удобство передвижения (0-10)
+            <input id="trip-comfort" type="number" min="0" max="10"
+          /></label>
+        </div>
+        <div>
+          <label
+            >Населенность (0-10)
+            <input id="trip-density" type="number" min="0" max="10"
+          /></label>
+        </div>
+      </div>
+      <button onclick="createTrip()">Сохранить</button>
+    </section>
+
+    <section>
+      <h2>Лента путешествий</h2>
+      <div id="trips" class="grid"></div>
+    </section>
+
+    <section>
+      <h2>Статус</h2>
+      <pre id="status"></pre>
+    </section>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const tripsEl = document.getElementById("trips");
+      const tokenLabel = document.getElementById("token-label");
+      const toastBox = document.getElementById("toast-container");
+
+      function setStatus(msg) {
+        statusEl.textContent = msg;
+      }
+
+      function showToast(message, type = "info") {
+        const el = document.createElement("div");
+        el.className = `toast toast-${type}`;
+        el.textContent = message;
+        toastBox.appendChild(el);
+        setTimeout(() => el.classList.add("hide"), 2500);
+        setTimeout(() => el.remove(), 3200);
+      }
+
+      function getToken() {
+        return localStorage.getItem("td_token") || "";
+      }
+      function setToken(token) {
+        if (token) {
+          localStorage.setItem("td_token", token);
+          tokenLabel.textContent = token.slice(0, 14) + "...";
+        } else {
+          localStorage.removeItem("td_token");
+          tokenLabel.textContent = "(нет)";
+        }
+      }
+      setToken(getToken());
+
+      async function api(path, options = {}) {
+        const headers = {
+          "Content-Type": "application/json",
+          ...(options.headers || {}),
+        };
+        if (getToken()) headers["Authorization"] = "Bearer " + getToken();
+        const res = await fetch(path, { ...options, headers });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Ошибка запроса");
+        return data;
+      }
+
+      async function register() {
+        try {
+          const username = document.getElementById("auth-user").value;
+          const password = document.getElementById("auth-pass").value;
+          const res = await api("/api/register", {
+            method: "POST",
+            body: JSON.stringify({ username, password }),
+          });
+          setStatus(res.message);
+          showToast(res.message, "success");
+        } catch (err) {
+          setStatus(err.message);
+          showToast(err.message, "error");
+        }
+      }
+
+      async function login() {
+        try {
+          const username = document.getElementById("auth-user").value;
+          const password = document.getElementById("auth-pass").value;
+          const res = await api("/api/login", {
+            method: "POST",
+            body: JSON.stringify({ username, password }),
+          });
+          setToken(res.token);
+          setStatus("Вход выполнен");
+          showToast("Вход выполнен", "success");
+        } catch (err) {
+          setStatus(err.message);
+          showToast(err.message, "error");
+        }
+      }
+
+      function parseNumber(val) {
+        if (val === "" || val === null || val === undefined) return null;
+        const num = Number(val);
+        return Number.isNaN(num) ? null : num;
+      }
+
+      async function createTrip() {
+        try {
+          const payload = {
+            title: document.getElementById("trip-title").value,
+            description: document.getElementById("trip-desc").value,
+            location: document.getElementById("trip-location").value,
+            lat: parseNumber(document.getElementById("trip-lat").value),
+            lng: parseNumber(document.getElementById("trip-lng").value),
+            cost: parseNumber(document.getElementById("trip-cost").value),
+            imageUrl: document.getElementById("trip-image").value.trim(),
+            heritage: document.getElementById("trip-heritage").value,
+            places: document.getElementById("trip-places").value,
+            ratingSafety: parseNumber(
+              document.getElementById("trip-safe").value
+            ),
+            ratingComfort: parseNumber(
+              document.getElementById("trip-comfort").value
+            ),
+            ratingDensity: parseNumber(
+              document.getElementById("trip-density").value
+            ),
+          };
+          const res = await api("/api/trips", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          setStatus(res.message);
+          showToast(res.message, "success");
+          loadTrips();
+        } catch (err) {
+          setStatus(err.message);
+          showToast(err.message, "error");
+        }
+      }
+
+      function renderTrip(t) {
+        const div = document.createElement("div");
+        div.className = "card";
+        const ratings = [];
+        if (t.rating_safety !== null && t.rating_safety !== undefined)
+          ratings.push(`Безопасность: ${t.rating_safety}/10`);
+        if (t.rating_comfort !== null && t.rating_comfort !== undefined)
+          ratings.push(`Удобство: ${t.rating_comfort}/10`);
+        if (t.rating_density !== null && t.rating_density !== undefined)
+          ratings.push(`Населенность: ${t.rating_density}/10`);
+        const heritage = (t.heritage || "").trim();
+        const places = (t.places || "").trim();
+        div.innerHTML = `
+          <strong>${t.title}</strong>
+          <div class="meta">Автор: ${t.author}</div>
+          <div class="meta">${t.location}</div>
+          <div class="meta">Стоимость: ${t.cost ?? "—"} ₽</div>
+          <div class="meta">Координаты: ${t.lat ?? "—"}, ${t.lng ?? "—"}</div>
+          ${
+            t.image_url
+              ? `<div class="imgbox"><img src="${t.image_url}" alt="photo" onerror="this.parentElement.style.display='none'"/></div>`
+              : ""
+          }
+          <div>${t.description || ""}</div>
+          ${heritage ? `<div class="meta">Наследие: ${heritage}</div>` : ""}
+          ${places ? `<div class="meta">Куда сходить: ${places}</div>` : ""}
+          ${ratings.length ? `<div class="meta">${ratings.join(" | ")}</div>` : ""}
+          <div class="meta">Создано: ${t.created_at}</div>
+        `;
+        tripsEl.appendChild(div);
+      }
+
+      async function loadTrips() {
+        try {
+          const trips = await api("/api/trips");
+          tripsEl.innerHTML = "";
+          trips.forEach(renderTrip);
+          setStatus(`Загружено путешествий: ${trips.length}`);
+        } catch (err) {
+          setStatus(err.message);
+          showToast(err.message, "error");
+        }
+      }
+
+      loadTrips();
+    </script>
+  </body>
+</html>
