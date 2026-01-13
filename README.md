@@ -52,7 +52,7 @@ git init
 git add .
 git commit -m "Travel diary app"
 git branch -M main
-git remote add origin https://github.com/<user>/<repo>.git
+git remote add origin https://github.com/yanushkayy/travel-diary.git
 git push -u origin main
 ```
 
